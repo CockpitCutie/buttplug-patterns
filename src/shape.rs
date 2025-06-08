@@ -16,6 +16,51 @@ impl Pattern for Constant {
     }
 }
 
+pub struct SawWave {
+    amplitude: f64,
+    wavelength_secs: f64,
+}
+
+impl SawWave {
+    pub fn new(amplitude: f64, wavelength_secs: f64) -> Self {
+        SawWave {
+            amplitude,
+            wavelength_secs,
+        }
+    }
+}
+
+impl Pattern for SawWave {
+    fn sample(&self, time: f64) -> f64 {
+        return self.amplitude * (1.0 / self.wavelength_secs) * time % 1.0;
+    }
+}
+
+pub struct TriangleWave {
+    amplitude: f64,
+    wavelength_secs: f64,
+}
+
+impl TriangleWave {
+    pub fn new(amplitude: f64, wavelength_secs: f64) -> Self {
+        TriangleWave {
+            amplitude,
+            wavelength_secs,
+        }
+    }
+}
+
+impl Pattern for TriangleWave {
+    fn sample(&self, time: f64) -> f64 {
+        // Formula for a triangle wave between 0 and `amplitude` with period `wavelength_secs`
+        // https://en.wikipedia.org/wiki/Triangle_wave#Definition
+        ((2.0 * self.amplitude / self.wavelength_secs)
+            * (((time - self.wavelength_secs / 4.0) % self.wavelength_secs)
+                - self.wavelength_secs / 2.0)
+                .abs()).min(self.amplitude) // first couple values are out of range for some reason so we clamp them down
+    }
+}
+
 pub struct SquareWave {
     amplitude: f64,
     wavelength_secs: f64,

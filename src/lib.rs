@@ -1,9 +1,8 @@
 pub mod driver;
-mod shape;
-
-pub use shape::{Constant, SineWave, SquareWave};
+pub mod shape;
 
 pub trait Pattern: Sized {
+    /// Gives an intensity value for a given time.
     fn sample(&self, time: f64) -> f64;
 
     /// Scales the pattern in the time domain by a given `scalar`.
