@@ -17,48 +17,47 @@ impl Pattern for Constant {
 }
 
 pub struct SquareWave {
-    up: f64,
-    down: f64,
-    frequency_hz: f64,
+    amplitude: f64,
+    wavelength_secs: f64,
 }
 
 impl SquareWave {
-    pub fn new(up: f64, down: f64, frequency_hz: f64) -> Self {
+    pub fn new(amplitude: f64, wavelength_secs: f64) -> Self {
         SquareWave {
-            up,
-            down,
-            frequency_hz,
+            amplitude,
+            wavelength_secs,
         }
     }
 }
 
 impl Pattern for SquareWave {
     fn sample(&self, time: f64) -> f64 {
-        if time % self.frequency_hz < self.frequency_hz / 2.0 {
-            self.up
+        if time % self.wavelength_secs < self.wavelength_secs / 2.0 {
+            self.amplitude
         } else {
-            self.down
+            0.0
         }
     }
 }
 
 pub struct SineWave {
     amplitude: f64,
-    frequency_hz: f64,
+    wavelength_secs: f64,
 }
 
 impl SineWave {
-    pub fn new(amplitude: f64, frequency_hz: f64) -> Self {
+    pub fn new(amplitude: f64, wavelength_secs: f64) -> Self {
         SineWave {
             amplitude,
-            frequency_hz,
+            wavelength_secs,
         }
     }
 }
 
 impl Pattern for SineWave {
     fn sample(&self, time: f64) -> f64 {
-        return (self.amplitude / 2.0) * f64::sin(2.0 * 3.14 * self.frequency_hz * time)
+        // sine value between 0 and `amplitude` based on a wavelength of `wavelength_secs`
+        return (self.amplitude / 2.0) * f64::cos(2.0 * 3.14 * (1.0 / self.wavelength_secs) * time)
             + self.amplitude / 2.0;
     }
 }
