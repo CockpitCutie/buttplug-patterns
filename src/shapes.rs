@@ -1,4 +1,4 @@
-use crate::{Pattern, PatternGenerator};
+use crate::PatternGenerator;
 
 pub struct Constant {
     level: f64,
@@ -45,7 +45,6 @@ impl PatternGenerator for SawWave {
     }
 }
 
-
 pub struct TriangleWave {
     amplitude: f64,
     wavelength_secs: f64,
@@ -75,7 +74,6 @@ impl PatternGenerator for TriangleWave {
         self.wavelength_secs
     }
 }
-
 
 pub struct SquareWave {
     amplitude: f64,

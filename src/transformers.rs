@@ -1,5 +1,4 @@
 use std::f64::consts;
-use std::f64::consts::E;
 
 use crate::Pattern;
 use crate::PatternGenerator;
