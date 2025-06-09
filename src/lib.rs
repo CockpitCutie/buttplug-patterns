@@ -1,13 +1,17 @@
 pub mod driver;
 pub mod shape;
 
-pub trait Pattern: Sized {
-    /// Gives an intensity value for a given time.
+/// Represents a pattern to be used to actuate buttplug devices.
+pub trait PatternGenerator {
     fn sample(&self, time: f64) -> f64;
 
     /// how long a cycle of the pattern takes
     fn duration(&self) -> f64;
+}
 
+impl<T: PatternGenerator> Pattern for T {}
+
+pub trait Pattern: PatternGenerator + Sized {
     /// Scales the pattern in the time domain by a given `scalar`.
     ///
     /// For example, a scalar of 2.0 would double the length of cycles.
@@ -41,7 +45,7 @@ pub trait Pattern: Sized {
     ///
     /// For example, a sine wave of amplitude 0.75 and a square wave of amplitude 0.25 would subtract to a sine wave of amplitude 0.5.
     fn subtract<Q: Pattern>(self, other: Q) -> Subtract<Self, Q> {
-        self.sum(other.scale_intensity(-1.0))
+        Subtract { a: self, b: other }
     }
 
     /// Takes the average of two patterns.
@@ -100,7 +104,7 @@ pub struct ScaleTime<P: Pattern> {
     scalar: f64,
 }
 
-impl<P: Pattern> Pattern for ScaleTime<P> {
+impl<P: Pattern> PatternGenerator for ScaleTime<P> {
     fn sample(&self, time: f64) -> f64 {
         self.pattern.sample(self.scalar * (1.0 / time))
     }
@@ -115,7 +119,7 @@ pub struct ScaleIntensity<P: Pattern> {
     scalar: f64,
 }
 
-impl<P: Pattern> Pattern for ScaleIntensity<P> {
+impl<P: Pattern> PatternGenerator for ScaleIntensity<P> {
     fn sample(&self, time: f64) -> f64 {
         self.scalar * self.pattern.sample(time)
     }
@@ -130,7 +134,7 @@ pub struct Sum<P: Pattern, Q: Pattern> {
     b: Q,
 }
 
-impl<P: Pattern, Q: Pattern> Pattern for Sum<P, Q> {
+impl<P: Pattern, Q: Pattern> PatternGenerator for Sum<P, Q> {
     fn sample(&self, time: f64) -> f64 {
         self.a.sample(time) + self.b.sample(time)
     }
@@ -140,14 +144,27 @@ impl<P: Pattern, Q: Pattern> Pattern for Sum<P, Q> {
     }
 }
 
-type Subtract<P, Q> = Sum<P, ScaleIntensity<Q>>;
+pub struct Subtract<P: Pattern, Q: Pattern> {
+    a: P,
+    b: Q,
+}
+
+impl<P: Pattern, Q: Pattern> PatternGenerator for Subtract<P, Q> {
+    fn sample(&self, time: f64) -> f64 {
+        self.a.sample(time) - self.b.sample(time)
+    }
+
+    fn duration(&self) -> f64 {
+        self.a.duration().max(self.b.duration())
+    }
+}
 
 pub struct Average<P: Pattern, Q: Pattern> {
     a: P,
     b: Q,
 }
 
-impl<P: Pattern, Q: Pattern> Pattern for Average<P, Q> {
+impl<P: Pattern, Q: Pattern> PatternGenerator for Average<P, Q> {
     fn sample(&self, time: f64) -> f64 {
         (self.a.sample(time) + self.b.sample(time)) / 2.0
     }
@@ -163,7 +180,7 @@ pub struct Clamp<P: Pattern> {
     floor: f64,
 }
 
-impl<P: Pattern> Pattern for Clamp<P> {
+impl<P: Pattern> PatternGenerator for Clamp<P> {
     fn sample(&self, time: f64) -> f64 {
         self.pattern.sample(time).max(self.floor).min(self.ceiling)
     }
@@ -178,7 +195,7 @@ pub struct Shift<P: Pattern> {
     time_shift: f64,
 }
 
-impl<P: Pattern> Pattern for Shift<P> {
+impl<P: Pattern> PatternGenerator for Shift<P> {
     fn sample(&self, time: f64) -> f64 {
         self.pattern.sample(time + self.time_shift)
     }
@@ -193,7 +210,7 @@ pub struct Repeat<P: Pattern> {
     count: f64,
 }
 
-impl<P: Pattern> Pattern for Repeat<P> {
+impl<P: Pattern> PatternGenerator for Repeat<P> {
     fn sample(&self, time: f64) -> f64 {
         self.pattern.sample(time % self.duration())
     }
@@ -207,7 +224,7 @@ pub struct Forever<P: Pattern> {
     pattern: P,
 }
 
-impl<P: Pattern> Pattern for Forever<P> {
+impl<P: Pattern> PatternGenerator for Forever<P> {
     fn sample(&self, time: f64) -> f64 {
         self.pattern.sample(time % self.pattern.duration())
     }
@@ -222,7 +239,7 @@ pub struct Chain<P: Pattern, Q: Pattern> {
     then: Q,
 }
 
-impl<P: Pattern, Q: Pattern> Pattern for Chain<P, Q> {
+impl<P: Pattern, Q: Pattern> PatternGenerator for Chain<P, Q> {
     fn sample(&self, time: f64) -> f64 {
         if time < self.first.duration() {
             self.first.sample(time)

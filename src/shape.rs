@@ -1,4 +1,4 @@
-use crate::Pattern;
+use crate::{Pattern, PatternGenerator};
 
 pub struct Constant {
     level: f64,
@@ -11,7 +11,7 @@ impl Constant {
     }
 }
 
-impl Pattern for Constant {
+impl PatternGenerator for Constant {
     fn sample(&self, _time: f64) -> f64 {
         self.level
     }
@@ -35,7 +35,7 @@ impl SawWave {
     }
 }
 
-impl Pattern for SawWave {
+impl PatternGenerator for SawWave {
     fn sample(&self, time: f64) -> f64 {
         self.amplitude * (1.0 / self.wavelength_secs) * time % 1.0
     }
@@ -44,6 +44,7 @@ impl Pattern for SawWave {
         self.wavelength_secs
     }
 }
+
 
 pub struct TriangleWave {
     amplitude: f64,
@@ -59,7 +60,7 @@ impl TriangleWave {
     }
 }
 
-impl Pattern for TriangleWave {
+impl PatternGenerator for TriangleWave {
     fn sample(&self, time: f64) -> f64 {
         // Formula for a triangle wave between 0 and `amplitude` with period `wavelength_secs`
         // https://en.wikipedia.org/wiki/Triangle_wave#Definition
@@ -75,6 +76,7 @@ impl Pattern for TriangleWave {
     }
 }
 
+
 pub struct SquareWave {
     amplitude: f64,
     wavelength_secs: f64,
@@ -89,7 +91,7 @@ impl SquareWave {
     }
 }
 
-impl Pattern for SquareWave {
+impl PatternGenerator for SquareWave {
     fn sample(&self, time: f64) -> f64 {
         if time % self.wavelength_secs < self.wavelength_secs / 2.0 {
             self.amplitude
@@ -117,7 +119,7 @@ impl SineWave {
     }
 }
 
-impl Pattern for SineWave {
+impl PatternGenerator for SineWave {
     fn sample(&self, time: f64) -> f64 {
         // sine value between 0 and `amplitude` based on a wavelength of `wavelength_secs` starting at 0
         (self.amplitude / 2.0)
