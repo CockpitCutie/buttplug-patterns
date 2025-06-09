@@ -3,14 +3,23 @@ pub mod shape;
 
 /// Represents a pattern to be used to actuate buttplug devices.
 pub trait PatternGenerator {
+    /// Gives an intensity value for a given time.
+    /// 
+    /// Behavior when sampling a pattern for a time past it's duration is not specified.
+    /// Some patterns will return valid values for any time, but you should use the 
+    /// `.repeat()`, `.forever()`, and `.chain()` methods of `Pattern` for extending Patterns
     fn sample(&self, time: f64) -> f64;
 
-    /// how long a cycle of the pattern takes
+    /// how long a cycle of the pattern takes in seconds
     fn duration(&self) -> f64;
 }
 
 impl<T: PatternGenerator> Pattern for T {}
 
+/// Extension trait for `PatternGenerator`, contains methods for building and transforming
+/// `Pattern`s,
+/// 
+/// Patterns can be done with the `Driver` type 
 pub trait Pattern: PatternGenerator + Sized {
     /// Scales the pattern in the time domain by a given `scalar`.
     ///
