@@ -1,12 +1,22 @@
-pub mod driver;
-pub mod shape;
+pub mod shapes;
+pub mod transformers;
+
+use std::{
+    sync::atomic::{AtomicBool, Ordering},
+    time::{Duration, Instant},
+};
+
+use buttplug::client::{ButtplugClient, ScalarValueCommand};
+use tokio::time::interval;
+
+use transformers::*;
 
 /// Represents a pattern to be used to actuate buttplug devices.
 pub trait PatternGenerator {
     /// Gives an intensity value for a given time.
-    /// 
+    ///
     /// Behavior when sampling a pattern for a time past it's duration is not specified.
-    /// Some patterns will return valid values for any time, but you should use the 
+    /// Some patterns will return valid values for any time, but you should use the
     /// `.repeat()`, `.forever()`, and `.chain()` methods of `Pattern` for extending Patterns
     fn sample(&self, time: f64) -> f64;
 
@@ -18,8 +28,8 @@ impl<T: PatternGenerator> Pattern for T {}
 
 /// Extension trait for `PatternGenerator`, contains methods for building and transforming
 /// `Pattern`s,
-/// 
-/// Patterns can be done with the `Driver` type 
+///
+/// Patterns can be done with the `Driver` type
 pub trait Pattern: PatternGenerator + Sized {
     /// Scales the pattern in the time domain by a given `scalar`.
     ///
@@ -82,6 +92,14 @@ pub trait Pattern: PatternGenerator + Sized {
         self.clamp(0.0, 1.0)
     }
 
+    /// Scales a pattern to a valid range for a buttplug command.
+    /// 
+    /// Scaling is performed by a sigmoid function 1/(1+e^(-x)).
+    fn scale_valid(self) -> ValidScale<Self> {
+        ValidScale { pattern: self }
+    }
+
+    // Time shifts a pattern by `time_shift` seconds, can be used to skip a portion of a pattern
     fn shift(self, time_shift: f64) -> Shift<Self> {
         Shift {
             pattern: self,
@@ -89,6 +107,7 @@ pub trait Pattern: PatternGenerator + Sized {
         }
     }
 
+    /// Repeats a pattern `count` times, fractional repeats are supported, so `pattern.repeat(1.5)` is valid
     fn repeat(self, count: f64) -> Repeat<Self> {
         Repeat {
             pattern: self,
@@ -96,10 +115,12 @@ pub trait Pattern: PatternGenerator + Sized {
         }
     }
 
+    /// Loops a pattern forever
     fn forever(self) -> Forever<Self> {
         Forever { pattern: self }
     }
 
+    /// Chains two patterns together, `other` is run after `self`'s duration.
     fn chain<Q: Pattern>(self, other: Q) -> Chain<Self, Q> {
         Chain {
             first: self,
@@ -108,156 +129,65 @@ pub trait Pattern: PatternGenerator + Sized {
     }
 }
 
-pub struct ScaleTime<P: Pattern> {
-    pattern: P,
-    scalar: f64,
+pub struct Driver {
+    pub buttplug: ButtplugClient,
+    tickrate_hz: u64,
+    pattern: Box<dyn PatternGenerator>,
 }
 
-impl<P: Pattern> PatternGenerator for ScaleTime<P> {
-    fn sample(&self, time: f64) -> f64 {
-        self.pattern.sample(self.scalar * (1.0 / time))
-    }
-
-    fn duration(&self) -> f64 {
-        self.pattern.duration()
-    }
-}
-
-pub struct ScaleIntensity<P: Pattern> {
-    pattern: P,
-    scalar: f64,
-}
-
-impl<P: Pattern> PatternGenerator for ScaleIntensity<P> {
-    fn sample(&self, time: f64) -> f64 {
-        self.scalar * self.pattern.sample(time)
-    }
-
-    fn duration(&self) -> f64 {
-        self.pattern.duration()
-    }
-}
-
-pub struct Sum<P: Pattern, Q: Pattern> {
-    a: P,
-    b: Q,
-}
-
-impl<P: Pattern, Q: Pattern> PatternGenerator for Sum<P, Q> {
-    fn sample(&self, time: f64) -> f64 {
-        self.a.sample(time) + self.b.sample(time)
-    }
-
-    fn duration(&self) -> f64 {
-        self.a.duration().max(self.b.duration())
-    }
-}
-
-pub struct Subtract<P: Pattern, Q: Pattern> {
-    a: P,
-    b: Q,
-}
-
-impl<P: Pattern, Q: Pattern> PatternGenerator for Subtract<P, Q> {
-    fn sample(&self, time: f64) -> f64 {
-        self.a.sample(time) - self.b.sample(time)
-    }
-
-    fn duration(&self) -> f64 {
-        self.a.duration().max(self.b.duration())
-    }
-}
-
-pub struct Average<P: Pattern, Q: Pattern> {
-    a: P,
-    b: Q,
-}
-
-impl<P: Pattern, Q: Pattern> PatternGenerator for Average<P, Q> {
-    fn sample(&self, time: f64) -> f64 {
-        (self.a.sample(time) + self.b.sample(time)) / 2.0
-    }
-
-    fn duration(&self) -> f64 {
-        self.a.duration().max(self.b.duration())
-    }
-}
-
-pub struct Clamp<P: Pattern> {
-    pattern: P,
-    ceiling: f64,
-    floor: f64,
-}
-
-impl<P: Pattern> PatternGenerator for Clamp<P> {
-    fn sample(&self, time: f64) -> f64 {
-        self.pattern.sample(time).max(self.floor).min(self.ceiling)
-    }
-
-    fn duration(&self) -> f64 {
-        self.pattern.duration()
-    }
-}
-
-pub struct Shift<P: Pattern> {
-    pattern: P,
-    time_shift: f64,
-}
-
-impl<P: Pattern> PatternGenerator for Shift<P> {
-    fn sample(&self, time: f64) -> f64 {
-        self.pattern.sample(time + self.time_shift)
-    }
-
-    fn duration(&self) -> f64 {
-        self.pattern.duration()
-    }
-}
-
-pub struct Repeat<P: Pattern> {
-    pattern: P,
-    count: f64,
-}
-
-impl<P: Pattern> PatternGenerator for Repeat<P> {
-    fn sample(&self, time: f64) -> f64 {
-        self.pattern.sample(time % self.duration())
-    }
-
-    fn duration(&self) -> f64 {
-        self.count * self.pattern.duration()
-    }
-}
-
-pub struct Forever<P: Pattern> {
-    pattern: P,
-}
-
-impl<P: Pattern> PatternGenerator for Forever<P> {
-    fn sample(&self, time: f64) -> f64 {
-        self.pattern.sample(time % self.pattern.duration())
-    }
-
-    fn duration(&self) -> f64 {
-        f64::MAX
-    }
-}
-
-pub struct Chain<P: Pattern, Q: Pattern> {
-    first: P,
-    then: Q,
-}
-
-impl<P: Pattern, Q: Pattern> PatternGenerator for Chain<P, Q> {
-    fn sample(&self, time: f64) -> f64 {
-        if time < self.first.duration() {
-            self.first.sample(time)
-        } else {
-            self.then.sample(time)
+impl Driver {
+    pub fn new<P: 'static + Pattern>(bp: ButtplugClient, pattern: P) -> Self {
+        Driver {
+            buttplug: bp,
+            tickrate_hz: 10,
+            pattern: Box::new(pattern),
         }
     }
 
-    fn duration(&self) -> f64 {
-        self.first.duration() + self.then.duration()
+    pub fn set_tickrate(&mut self, hz: u64) -> &mut Self {
+        self.tickrate_hz = hz;
+        self
+    }
+
+    pub async fn run(&mut self) {
+        let start = Instant::now();
+        let mut interval = interval(Duration::from_millis(1000 / self.tickrate_hz));
+        loop {
+            let elapsed = start.elapsed().as_secs_f64();
+            if elapsed > self.pattern.duration() {
+                break;
+            }
+
+            for device in self.buttplug.devices() {
+                let level = self.pattern.sample(elapsed);
+                device
+                    .vibrate(&ScalarValueCommand::ScalarValue(level))
+                    .await
+                    .unwrap();
+            }
+
+            interval.tick().await;
+        }
+    }
+
+    pub async fn run_while(&mut self, running: AtomicBool) {
+        let mut interval = interval(Duration::from_millis(1000 / self.tickrate_hz));
+        let start = Instant::now();
+        while running.load(Ordering::Acquire) {
+            let elapsed = start.elapsed().as_secs_f64();
+            if elapsed > self.pattern.duration() {
+                break;
+            }
+
+            for device in self.buttplug.devices() {
+                let level = self.pattern.sample(elapsed);
+                device
+                    .vibrate(&ScalarValueCommand::ScalarValue(level))
+                    .await
+                    .unwrap();
+            }
+
+            interval.tick().await;
+        }
     }
 }
