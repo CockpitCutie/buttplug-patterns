@@ -1,4 +1,4 @@
-use std::time::{Duration, Instant};
+use std::{sync::atomic::{AtomicBool, Ordering}, time::{Duration, Instant}};
 
 use buttplug::client::{ButtplugClient, ScalarValueCommand};
 use tokio::time::{interval};
@@ -29,6 +29,27 @@ impl Driver {
         let start = Instant::now();
         let mut interval = interval(Duration::from_millis(1000 / self.tickrate_hz));
         loop {
+            let elapsed = start.elapsed().as_secs_f64();
+            if elapsed > self.pattern.duration() {
+                break;
+            }
+
+            for device in self.buttplug.devices() {
+                let level = self.pattern.sample(elapsed);
+                device
+                    .vibrate(&ScalarValueCommand::ScalarValue(level))
+                    .await
+                    .unwrap();
+            }
+
+            interval.tick().await;
+        }
+    }
+
+    pub async fn run_while(&mut self, running: AtomicBool) {
+        let mut interval = interval(Duration::from_millis(1000 / self.tickrate_hz));
+        let start = Instant::now();
+        while running.load(Ordering::Acquire) {
             let elapsed = start.elapsed().as_secs_f64();
             if elapsed > self.pattern.duration() {
                 break;
