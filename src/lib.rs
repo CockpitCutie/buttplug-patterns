@@ -1,4 +1,5 @@
 pub mod shapes;
+pub mod random;
 pub mod transformers;
 
 use std::{
@@ -126,6 +127,21 @@ pub trait Pattern: PatternGenerator + Sized {
             first: self,
             then: other,
         }
+    }
+}
+
+pub struct CustomPattern {
+    pub sample: fn(f64) -> f64,
+    pub duration: fn() -> f64,
+}
+
+impl PatternGenerator for CustomPattern {
+    fn sample(&self, time: f64) -> f64 {
+        (self.sample)(time)
+    }
+
+    fn duration(&self) -> f64 {
+        (self.duration)()
     }
 }
 
