@@ -36,6 +36,7 @@ impl<T: PatternGenerator> Pattern for T {}
 ///
 /// Patterns can be done with the `Driver` type
 pub trait Pattern: PatternGenerator + Sized {
+
     /// Scales the pattern in the time domain by a given `scalar`.
     ///
     /// For example, a scalar of 2.0 would double the length of cycles.
@@ -154,6 +155,16 @@ impl PatternGenerator for BpPattern {
 
     fn duration(&self) -> f64 {
         self.pattern.duration()
+    }
+}
+pub trait ToBpPattern {
+    fn to_bp_pattern(self) -> BpPattern;
+}
+
+impl<T: PatternGenerator + 'static> ToBpPattern for T {
+    /// Converts any pattern to a conrete wrapper.
+    fn to_bp_pattern(self) -> BpPattern {
+        BpPattern::new(self)
     }
 }
 
