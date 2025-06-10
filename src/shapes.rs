@@ -1,6 +1,6 @@
 use crate::PatternGenerator;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Constant {
     level: f64,
     duration: f64,
@@ -22,7 +22,7 @@ impl PatternGenerator for Constant {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Linear {
     from: f64,
     to: f64,
@@ -45,7 +45,7 @@ impl PatternGenerator for Linear {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct SawWave {
     amplitude: f64,
     wavelength_secs: f64,
@@ -70,7 +70,7 @@ impl PatternGenerator for SawWave {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct TriangleWave {
     amplitude: f64,
     wavelength_secs: f64,
@@ -101,7 +101,7 @@ impl PatternGenerator for TriangleWave {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct SquareWave {
     amplitude: f64,
     wavelength_secs: f64,
@@ -130,7 +130,7 @@ impl PatternGenerator for SquareWave {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct SineWave {
     amplitude: f64,
     wavelength_secs: f64,

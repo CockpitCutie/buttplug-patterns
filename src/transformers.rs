@@ -3,6 +3,7 @@ use std::f64::consts;
 use crate::Pattern;
 use crate::PatternGenerator;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct ScaleTime<P: Pattern> {
     pub pattern: P,
     pub scalar: f64,
@@ -18,6 +19,7 @@ impl<P: Pattern> PatternGenerator for ScaleTime<P> {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct ScaleIntensity<P: Pattern> {
     pub pattern: P,
     pub scalar: f64,
@@ -33,6 +35,7 @@ impl<P: Pattern> PatternGenerator for ScaleIntensity<P> {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct Sum<P: Pattern, Q: Pattern> {
     pub a: P,
     pub b: Q,
@@ -48,6 +51,7 @@ impl<P: Pattern, Q: Pattern> PatternGenerator for Sum<P, Q> {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct Subtract<P: Pattern, Q: Pattern> {
     pub a: P,
     pub b: Q,
@@ -63,6 +67,7 @@ impl<P: Pattern, Q: Pattern> PatternGenerator for Subtract<P, Q> {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct Average<P: Pattern, Q: Pattern> {
     pub a: P,
     pub b: Q,
@@ -78,6 +83,7 @@ impl<P: Pattern, Q: Pattern> PatternGenerator for Average<P, Q> {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct Clamp<P: Pattern> {
     pub pattern: P,
     pub ceiling: f64,
@@ -94,6 +100,7 @@ impl<P: Pattern> PatternGenerator for Clamp<P> {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct ValidScale<P: Pattern> {
     pub pattern: P
 }
@@ -108,6 +115,7 @@ impl<P: Pattern> PatternGenerator for ValidScale<P> {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct Shift<P: Pattern> {
     pub pattern: P,
     pub time_shift: f64,
@@ -123,6 +131,7 @@ impl<P: Pattern> PatternGenerator for Shift<P> {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct Repeat<P: Pattern> {
     pub pattern: P,
     pub count: f64,
@@ -138,6 +147,7 @@ impl<P: Pattern> PatternGenerator for Repeat<P> {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct Forever<P: Pattern> {
     pub pattern: P,
 }
@@ -152,6 +162,7 @@ impl<P: Pattern> PatternGenerator for Forever<P> {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct Chain<P: Pattern, Q: Pattern> {
     pub first: P,
     pub then: Q,
@@ -174,6 +185,7 @@ impl<P: Pattern, Q: Pattern> PatternGenerator for Chain<P, Q> {
 /// Modulates the amplitude of a pattern by another pattern.
 /// 
 /// Effectively a multiply combinator.
+#[derive(Clone, Debug, PartialEq)]
 pub struct AmplitudeModulator<P: Pattern, M: Pattern> {
     pub pattern: P,
     pub modulator: M,

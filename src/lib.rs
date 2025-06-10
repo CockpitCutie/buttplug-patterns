@@ -27,6 +27,8 @@ pub trait PatternGenerator {
 
     /// how long a cycle of the pattern takes in seconds
     fn duration(&self) -> f64;
+
+    fn reset(&mut self) {}
 }
 
 impl<T: PatternGenerator> Pattern for T {}
@@ -36,7 +38,6 @@ impl<T: PatternGenerator> Pattern for T {}
 ///
 /// Patterns can be done with the `Driver` type
 pub trait Pattern: PatternGenerator + Sized {
-
     /// Scales the pattern in the time domain by a given `scalar`.
     ///
     /// For example, a scalar of 2.0 would double the length of cycles.
@@ -133,6 +134,20 @@ pub trait Pattern: PatternGenerator + Sized {
             then: other,
         }
     }
+
+    fn amplitude_moduate<M: Pattern>(self, modulator: M) -> AmplitudeModulator<Self, M> {
+        AmplitudeModulator {
+            pattern: self,
+            modulator,
+        }
+    }
+
+    fn into_bp_pattern(self) -> BpPattern
+    where
+        Self: Sized + 'static,
+    {
+        BpPattern::new(self)
+    }
 }
 
 /// A concrete wrapper around a pattern that implements the `PatternGenerator` trait.
@@ -155,16 +170,6 @@ impl PatternGenerator for BpPattern {
 
     fn duration(&self) -> f64 {
         self.pattern.duration()
-    }
-}
-pub trait ToBpPattern {
-    fn to_bp_pattern(self) -> BpPattern;
-}
-
-impl<T: PatternGenerator + 'static> ToBpPattern for T {
-    /// Converts any pattern to a conrete wrapper.
-    fn to_bp_pattern(self) -> BpPattern {
-        BpPattern::new(self)
     }
 }
 
