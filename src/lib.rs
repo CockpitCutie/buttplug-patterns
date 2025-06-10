@@ -3,7 +3,7 @@ pub mod random;
 pub mod transformers;
 
 use std::{
-    sync::atomic::{AtomicBool, Ordering},
+    sync::{atomic::{AtomicBool, Ordering}, Arc},
     time::{Duration, Instant},
 };
 
@@ -145,26 +145,36 @@ impl PatternGenerator for CustomPattern {
     }
 }
 
+/// Represents a driver that can send patterns to buttplug devices.
 pub struct Driver {
-    pub buttplug: ButtplugClient,
+    pub buttplug: Arc<ButtplugClient>,
     tickrate_hz: u64,
     pattern: Box<dyn PatternGenerator>,
 }
 
 impl Driver {
-    pub fn new<P: 'static + Pattern>(bp: ButtplugClient, pattern: P) -> Self {
+    /// Creates a new driver with a given ButtplugClient and Pattern.
+    ///
+    /// The ButtplugClient is passed via an Arc to allow for applications to maintain access to the client
+    /// after the driver has been created.
+    pub fn new<P: 'static + Pattern>(bp: Arc<ButtplugClient>, pattern: P) -> Self {
         Driver {
             buttplug: bp,
-            tickrate_hz: 10,
+            tickrate_hz: 10, // 10 hz is fast enough to feel smooth without overwhelming the device or server in my testing
             pattern: Box::new(pattern),
         }
     }
 
+    /// Sets the tickrate of the driver, in Hz. The tickrate is the number of times per second 
+    /// that the driver samples the pattern and send the new intensity to the device.
+    /// 
+    /// The default tickrate is 10 Hz.
     pub fn set_tickrate(&mut self, hz: u64) -> &mut Self {
         self.tickrate_hz = hz;
         self
     }
 
+    /// Runs the driver, actuating all connected devices with the current pattern. All devices will stop when `run` exits.
     pub async fn run(&mut self) {
         let start = Instant::now();
         let mut interval = interval(Duration::from_millis(1000 / self.tickrate_hz));
@@ -184,8 +194,12 @@ impl Driver {
 
             interval.tick().await;
         }
+        self.buttplug.stop_all_devices().await.unwrap();
     }
 
+    /// Runs the driver, actuating all connected devices with the current pattern, while the `running` is true.
+    ///
+    /// This is useful for when you want to cancel the driver early. All devices will stop when `run_while` exits.
     pub async fn run_while(&mut self, running: AtomicBool) {
         let mut interval = interval(Duration::from_millis(1000 / self.tickrate_hz));
         let start = Instant::now();
@@ -205,5 +219,6 @@ impl Driver {
 
             interval.tick().await;
         }
+        self.buttplug.stop_all_devices().await.unwrap();
     }
 }
