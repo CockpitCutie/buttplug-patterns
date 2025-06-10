@@ -3,6 +3,7 @@ use std::{ops::Range, time::Instant};
 use crate::PatternGenerator;
 
 /// Generates a random value between the given range every tick.
+#[derive(Clone, Debug)]
 pub struct Random {
     pub range: Range<f64>,
     pub duration: f64,
@@ -28,6 +29,7 @@ impl PatternGenerator for Random {
 /// 
 /// This can not generate random values faster than the driver tickrate, 
 /// and may skip values if the driver is not fast enough.
+#[derive(Clone, Debug)]
 pub struct RandomEvery {
     pub range: Range<f64>,
     pub duration: f64,
