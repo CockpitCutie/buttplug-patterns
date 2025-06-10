@@ -21,6 +21,28 @@ impl PatternGenerator for Constant {
     }
 }
 
+pub struct Linear {
+    from: f64,
+    to: f64,
+    duration: f64,
+}
+
+impl Linear {
+    pub fn new(from: f64, to: f64, duration: f64) -> Self {
+        Linear { from, to, duration }
+    }
+}
+
+impl PatternGenerator for Linear {
+    fn sample(&self, time: f64) -> f64 {
+        self.from + (self.to - self.from) * time / self.duration
+    }
+
+    fn duration(&self) -> f64 {
+        self.duration
+    }
+}
+
 pub struct SawWave {
     amplitude: f64,
     wavelength_secs: f64,
