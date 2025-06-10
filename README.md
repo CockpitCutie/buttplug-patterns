@@ -1,5 +1,5 @@
 # Buttplug Patterns
-Create complex vibration patterns for buttplugio devices!
+A composable interface for creating complex vibration patterns for buttplugio devices!
 
 ### Creating Patterns
 Patterns are created using a builder pattern, there are several primitives
