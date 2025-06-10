@@ -170,3 +170,21 @@ impl<P: Pattern, Q: Pattern> PatternGenerator for Chain<P, Q> {
         self.first.duration() + self.then.duration()
     }
 }
+
+/// Modulates the amplitude of a pattern by another pattern.
+/// 
+/// Effectively a multiply combinator.
+pub struct AmplitudeModulator<P: Pattern, M: Pattern> {
+    pub pattern: P,
+    pub modulator: M,
+}
+
+impl<P: Pattern, M: Pattern> PatternGenerator for AmplitudeModulator<P, M> {
+    fn sample(&mut self, time: f64) -> f64 {
+        self.pattern.sample(time) * self.modulator.sample(time)
+    }
+
+    fn duration(&self) -> f64 {
+        self.pattern.duration()
+    }
+}
