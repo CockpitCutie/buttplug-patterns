@@ -134,6 +134,29 @@ pub trait Pattern: PatternGenerator + Sized {
     }
 }
 
+/// A concrete wrapper around a pattern that implements the `PatternGenerator` trait.
+pub struct BpPattern {
+    pub pattern: Box<dyn PatternGenerator>,
+}
+
+impl BpPattern {
+    pub fn new<P: PatternGenerator + 'static>(pattern: P) -> Self {
+        BpPattern {
+            pattern: Box::new(pattern),
+        }
+    }
+}
+
+impl PatternGenerator for BpPattern {
+    fn sample(&mut self, time: f64) -> f64 {
+        self.pattern.sample(time)
+    }
+
+    fn duration(&self) -> f64 {
+        self.pattern.duration()
+    }
+}
+
 /// A pattern that can be used to make a custom pattern.
 ///
 /// This is useful for when you want to create a pattern that is not supported by the library.
