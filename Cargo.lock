@@ -320,6 +320,7 @@ name = "buttplug-patterns"
 version = "0.1.0"
 dependencies = [
  "buttplug",
+ "rand 0.9.1",
  "tokio",
 ]
 
