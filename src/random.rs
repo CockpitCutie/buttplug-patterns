@@ -15,7 +15,7 @@ impl Random {
 }
 
 impl PatternGenerator for Random {
-    fn sample(&self, _time: f64) -> f64 {
+    fn sample(&mut self, _time: f64) -> f64 {
         rand::random_range(self.range.clone())
     }
 

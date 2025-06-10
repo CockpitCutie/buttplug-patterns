@@ -9,7 +9,7 @@ pub struct ScaleTime<P: Pattern> {
 }
 
 impl<P: Pattern> PatternGenerator for ScaleTime<P> {
-    fn sample(&self, time: f64) -> f64 {
+    fn sample(&mut self, time: f64) -> f64 {
         self.pattern.sample(self.scalar * (1.0 / time))
     }
 
@@ -24,7 +24,7 @@ pub struct ScaleIntensity<P: Pattern> {
 }
 
 impl<P: Pattern> PatternGenerator for ScaleIntensity<P> {
-    fn sample(&self, time: f64) -> f64 {
+    fn sample(&mut self, time: f64) -> f64 {
         self.scalar * self.pattern.sample(time)
     }
 
@@ -39,7 +39,7 @@ pub struct Sum<P: Pattern, Q: Pattern> {
 }
 
 impl<P: Pattern, Q: Pattern> PatternGenerator for Sum<P, Q> {
-    fn sample(&self, time: f64) -> f64 {
+    fn sample(&mut self, time: f64) -> f64 {
         self.a.sample(time) + self.b.sample(time)
     }
 
@@ -54,7 +54,7 @@ pub struct Subtract<P: Pattern, Q: Pattern> {
 }
 
 impl<P: Pattern, Q: Pattern> PatternGenerator for Subtract<P, Q> {
-    fn sample(&self, time: f64) -> f64 {
+    fn sample(&mut self, time: f64) -> f64 {
         self.a.sample(time) - self.b.sample(time)
     }
 
@@ -69,7 +69,7 @@ pub struct Average<P: Pattern, Q: Pattern> {
 }
 
 impl<P: Pattern, Q: Pattern> PatternGenerator for Average<P, Q> {
-    fn sample(&self, time: f64) -> f64 {
+    fn sample(&mut self, time: f64) -> f64 {
         (self.a.sample(time) + self.b.sample(time)) / 2.0
     }
 
@@ -85,7 +85,7 @@ pub struct Clamp<P: Pattern> {
 }
 
 impl<P: Pattern> PatternGenerator for Clamp<P> {
-    fn sample(&self, time: f64) -> f64 {
+    fn sample(&mut self, time: f64) -> f64 {
         self.pattern.sample(time).max(self.floor).min(self.ceiling)
     }
 
@@ -99,7 +99,7 @@ pub struct ValidScale<P: Pattern> {
 }
 
 impl<P: Pattern> PatternGenerator for ValidScale<P> {
-    fn sample(&self, time: f64) -> f64 {
+    fn sample(&mut self, time: f64) -> f64 {
         1.0 / (1.0 + consts::E.powf(-self.pattern.sample(time)))
     }
 
@@ -114,7 +114,7 @@ pub struct Shift<P: Pattern> {
 }
 
 impl<P: Pattern> PatternGenerator for Shift<P> {
-    fn sample(&self, time: f64) -> f64 {
+    fn sample(&mut self, time: f64) -> f64 {
         self.pattern.sample(time + self.time_shift)
     }
 
@@ -129,7 +129,7 @@ pub struct Repeat<P: Pattern> {
 }
 
 impl<P: Pattern> PatternGenerator for Repeat<P> {
-    fn sample(&self, time: f64) -> f64 {
+    fn sample(&mut self, time: f64) -> f64 {
         self.pattern.sample(time % self.duration())
     }
 
@@ -143,7 +143,7 @@ pub struct Forever<P: Pattern> {
 }
 
 impl<P: Pattern> PatternGenerator for Forever<P> {
-    fn sample(&self, time: f64) -> f64 {
+    fn sample(&mut self, time: f64) -> f64 {
         self.pattern.sample(time % self.pattern.duration())
     }
 
@@ -158,7 +158,7 @@ pub struct Chain<P: Pattern, Q: Pattern> {
 }
 
 impl<P: Pattern, Q: Pattern> PatternGenerator for Chain<P, Q> {
-    fn sample(&self, time: f64) -> f64 {
+    fn sample(&mut self, time: f64) -> f64 {
         if time < self.first.duration() {
             self.first.sample(time)
         } else {

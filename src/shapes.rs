@@ -12,7 +12,7 @@ impl Constant {
 }
 
 impl PatternGenerator for Constant {
-    fn sample(&self, _time: f64) -> f64 {
+    fn sample(&mut self, _time: f64) -> f64 {
         self.level
     }
 
@@ -34,7 +34,7 @@ impl Linear {
 }
 
 impl PatternGenerator for Linear {
-    fn sample(&self, time: f64) -> f64 {
+    fn sample(&mut self, time: f64) -> f64 {
         self.from + (self.to - self.from) * time / self.duration
     }
 
@@ -58,7 +58,7 @@ impl SawWave {
 }
 
 impl PatternGenerator for SawWave {
-    fn sample(&self, time: f64) -> f64 {
+    fn sample(&mut self, time: f64) -> f64 {
         self.amplitude * (1.0 / self.wavelength_secs) * time % 1.0
     }
 
@@ -82,7 +82,7 @@ impl TriangleWave {
 }
 
 impl PatternGenerator for TriangleWave {
-    fn sample(&self, time: f64) -> f64 {
+    fn sample(&mut self, time: f64) -> f64 {
         // Formula for a triangle wave between 0 and `amplitude` with period `wavelength_secs`
         // https://en.wikipedia.org/wiki/Triangle_wave#Definition
         ((2.0 * self.amplitude / self.wavelength_secs)
@@ -112,7 +112,7 @@ impl SquareWave {
 }
 
 impl PatternGenerator for SquareWave {
-    fn sample(&self, time: f64) -> f64 {
+    fn sample(&mut self, time: f64) -> f64 {
         if time % self.wavelength_secs < self.wavelength_secs / 2.0 {
             self.amplitude
         } else {
@@ -140,7 +140,7 @@ impl SineWave {
 }
 
 impl PatternGenerator for SineWave {
-    fn sample(&self, time: f64) -> f64 {
+    fn sample(&mut self, time: f64) -> f64 {
         // sine value between 0 and `amplitude` based on a wavelength of `wavelength_secs` starting at 0
         (self.amplitude / 2.0)
             * f64::cos(

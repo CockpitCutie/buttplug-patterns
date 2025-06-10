@@ -7,7 +7,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use buttplug::client::{ButtplugClient, ScalarValueCommand};
+use buttplug::client::{ButtplugClient, ButtplugClientError, ScalarValueCommand};
 use tokio::time::interval;
 
 use transformers::*;
@@ -19,7 +19,7 @@ pub trait PatternGenerator {
     /// Behavior when sampling a pattern for a time past it's duration is not specified.
     /// Some patterns will return valid values for any time, but you should use the
     /// `.repeat()`, `.forever()`, and `.chain()` methods of `Pattern` for extending Patterns
-    fn sample(&self, time: f64) -> f64;
+    fn sample(&mut self, time: f64) -> f64;
 
     /// how long a cycle of the pattern takes in seconds
     fn duration(&self) -> f64;
@@ -130,13 +130,17 @@ pub trait Pattern: PatternGenerator + Sized {
     }
 }
 
+/// A pattern that can be used to make a custom pattern.
+///
+/// This is useful for when you want to create a pattern that is not supported by the library.
+/// To implement more complex patterns, consider making a type that implements the `PatternGenerator` trait.
 pub struct CustomPattern {
     pub sample: fn(f64) -> f64,
     pub duration: fn() -> f64,
 }
 
 impl PatternGenerator for CustomPattern {
-    fn sample(&self, time: f64) -> f64 {
+    fn sample(&mut self, time: f64) -> f64 {
         (self.sample)(time)
     }
 
@@ -200,7 +204,7 @@ impl Driver {
     /// Runs the driver, actuating all connected devices with the current pattern, while the `running` is true.
     ///
     /// This is useful for when you want to cancel the driver early. All devices will stop when `run_while` exits.
-    pub async fn run_while(&mut self, running: AtomicBool) {
+    pub async fn run_while(&mut self, running: AtomicBool) -> Result<(), ButtplugClientError> {
         let mut interval = interval(Duration::from_millis(1000 / self.tickrate_hz));
         let start = Instant::now();
         while running.load(Ordering::Acquire) {
@@ -213,12 +217,12 @@ impl Driver {
                 let level = self.pattern.sample(elapsed);
                 device
                     .vibrate(&ScalarValueCommand::ScalarValue(level))
-                    .await
-                    .unwrap();
+                    .await?;
             }
 
             interval.tick().await;
         }
-        self.buttplug.stop_all_devices().await.unwrap();
+        self.buttplug.stop_all_devices().await?;
+        Ok(())
     }
 }
