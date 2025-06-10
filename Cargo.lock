@@ -316,15 +316,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "buttplug-patterns"
-version = "0.1.0"
-dependencies = [
- "buttplug",
- "rand 0.9.1",
- "tokio",
-]
-
-[[package]]
 name = "buttplug_derive"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -332,6 +323,15 @@ checksum = "cc5ee14ebc45f9ef4fb919e11ff6a51decfd6007c7c623107c652c2ab552a211"
 dependencies = [
  "quote",
  "syn 2.0.101",
+]
+
+[[package]]
+name = "buttplug_patterns"
+version = "0.1.0"
+dependencies = [
+ "buttplug",
+ "rand 0.9.1",
+ "tokio",
 ]
 
 [[package]]
