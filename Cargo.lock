@@ -222,15 +222,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3eeab4423108c5d7c744f4d234de88d18d636100093ae04caf4825134b9c3a32"
 
 [[package]]
-name = "bp_patterns"
-version = "0.1.0"
-dependencies = [
- "buttplug",
- "rand 0.9.1",
- "tokio",
-]
-
-[[package]]
 name = "btleplug"
 version = "0.11.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -332,6 +323,15 @@ checksum = "cc5ee14ebc45f9ef4fb919e11ff6a51decfd6007c7c623107c652c2ab552a211"
 dependencies = [
  "quote",
  "syn 2.0.101",
+]
+
+[[package]]
+name = "buttplug_patterns"
+version = "0.1.0"
+dependencies = [
+ "buttplug",
+ "rand 0.9.1",
+ "tokio",
 ]
 
 [[package]]
