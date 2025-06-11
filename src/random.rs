@@ -69,6 +69,7 @@ impl PatternGenerator for RandomEvery {
     }
 }
 
+/// Randomly increases and decreases a value between the given range every tick.
 #[derive(Clone, Debug, PartialEq)]
 pub struct RandomWalk {
     pub range: Range<f64>,

@@ -1,5 +1,9 @@
+/// Patterns that generate random values.
 pub mod random;
+/// Patterns that generate basic shapes and waves.
 pub mod shapes;
+/// Patterns that transform other patterns.
+/// Most transformers should not be used directly, but through methods on the `Pattern` trait.
 pub mod transformers;
 
 use std::{
@@ -28,6 +32,8 @@ pub trait PatternGenerator {
     /// how long a cycle of the pattern takes in seconds
     fn duration(&self) -> f64;
 
+    /// Resets the pattern to its initial state if it is stateful.
+    /// if the pattern is stateless, this method does nothing.
     fn reset(&mut self) {}
 }
 
@@ -175,7 +181,7 @@ impl PatternGenerator for BpPattern {
     }
 }
 
-/// A pattern that can be used to make a custom pattern.
+/// Can be used to make simple custom patterns.
 ///
 /// This is useful for when you want to create a pattern that is not supported by the library.
 /// To implement more complex patterns, consider making a type that implements the `PatternGenerator` trait.
@@ -194,7 +200,7 @@ impl PatternGenerator for CustomPattern {
     }
 }
 
-/// Represents a driver that can send patterns to buttplug devices.
+/// Driver that can send patterns to buttplug devices.
 pub struct Driver {
     pub buttplug: Arc<ButtplugClient>,
     tickrate_hz: u64,
@@ -219,7 +225,7 @@ impl Driver {
     }
 
     /// Sets the tickrate of the driver, in Hz. The tickrate is the number of times per second
-    /// that the driver samples the pattern and send the new intensity to the device.
+    /// that the driver samples the pattern and sends the new intensity to the device.
     ///
     /// The default tickrate is 10 Hz.
     pub fn set_tickrate(&mut self, hz: u64) -> &mut Self {
@@ -264,7 +270,7 @@ impl Driver {
         self
     }
 
-    /// Removes the pattern of a specific device based on its ID.
+    /// Removes the pattern of a specific actuator based on its device and actuator ID.
     pub fn remove_actuator_pattern(&mut self, device_id: u32, actuator_id: u32) -> &mut Self {
         self.actuator_patterns.remove(&(device_id, actuator_id));
         self
@@ -272,6 +278,9 @@ impl Driver {
 
     /// Runs the driver, actuating all connected devices with the current pattern. All devices will stop when `run` exits.
     pub async fn run(&mut self) {
+        self.pattern.reset();
+        self.device_patterns.values_mut().for_each(|p| p.reset());
+        self.actuator_patterns.values_mut().for_each(|p| p.reset());
         let start = Instant::now();
         let mut interval = interval(Duration::from_millis(1000 / self.tickrate_hz));
         loop {
@@ -311,6 +320,9 @@ impl Driver {
     ///
     /// This is useful for when you want to cancel the driver early. All devices will stop when `run_while` exits.
     pub async fn run_while(&mut self, running: AtomicBool) -> Result<(), ButtplugClientError> {
+        self.pattern.reset();
+        self.device_patterns.values_mut().for_each(|p| p.reset());
+        self.actuator_patterns.values_mut().for_each(|p| p.reset());
         let mut interval = interval(Duration::from_millis(1000 / self.tickrate_hz));
         let start = Instant::now();
         while running.load(Ordering::Acquire) {

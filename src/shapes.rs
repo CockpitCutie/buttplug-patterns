@@ -1,5 +1,6 @@
 use crate::PatternGenerator;
 
+/// Generates a constant value for a given duration.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Constant {
     level: f64,
@@ -22,6 +23,7 @@ impl PatternGenerator for Constant {
     }
 }
 
+/// Generates a linear value between two points for a given duration.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Linear {
     from: f64,
@@ -45,6 +47,10 @@ impl PatternGenerator for Linear {
     }
 }
 
+/// Generates a Saw wave between 0 and an amplitude for a given duration.
+/// 
+/// Waves are generated as single pulses with a given wavelength.
+/// To play several cycles of the wave in sequence, use the `repeat` method.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct SawWave {
     amplitude: f64,
@@ -70,6 +76,10 @@ impl PatternGenerator for SawWave {
     }
 }
 
+/// Generates a Triangle wave between 0 and an amplitude for a given duration.
+/// 
+/// Waves are generated as single pulses with a given wavelength.
+/// To play several cycles of the wave in sequence, use the `repeat` method.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct TriangleWave {
     amplitude: f64,
@@ -101,6 +111,10 @@ impl PatternGenerator for TriangleWave {
     }
 }
 
+/// Generates a Square wave between 0 and an amplitude for a given duration.
+/// 
+/// Waves are generated as single pulses with a given wavelength.
+/// To play several cycles of the wave in sequence, use the `repeat` method.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct SquareWave {
     amplitude: f64,
@@ -130,6 +144,10 @@ impl PatternGenerator for SquareWave {
     }
 }
 
+/// Generates a Sine wave between 0 and an amplitude for a given duration.
+/// 
+/// Waves are generated as single pulses with a given wavelength.
+/// To play several cycles of the wave in sequence, use the `repeat` method.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct SineWave {
     amplitude: f64,
