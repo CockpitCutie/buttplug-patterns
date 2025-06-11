@@ -277,13 +277,20 @@ impl Driver {
     }
 
     /// Runs the driver, actuating all connected devices with the current pattern. All devices will stop when `run` exits.
-    pub async fn run(&mut self) {
+    pub async fn run(&mut self) -> Result<(), ButtplugClientError> {
+        self.run_while(AtomicBool::new(true)).await
+    }
+
+    /// Runs the driver, actuating all connected devices with the current pattern, while the `running` is true.
+    ///
+    /// This is useful for when you want to cancel the driver early. All devices will stop when `run_while` exits.
+    pub async fn run_while(&mut self, running: AtomicBool) -> Result<(), ButtplugClientError> {
         self.pattern.reset();
         self.device_patterns.values_mut().for_each(|p| p.reset());
         self.actuator_patterns.values_mut().for_each(|p| p.reset());
         let start = Instant::now();
         let mut interval = interval(Duration::from_millis(1000 / self.tickrate_hz));
-        loop {
+        while running.load(Ordering::Acquire) {
             let elapsed = start.elapsed().as_secs_f64();
             if elapsed > self.pattern.duration() {
                 break;
@@ -308,39 +315,10 @@ impl Driver {
                 }
                 device
                     .vibrate(&ScalarValueCommand::ScalarValueMap(actuator_map))
-                    .await
-                    .unwrap();
-            }
-            interval.tick().await;
-        }
-        self.buttplug.stop_all_devices().await.unwrap();
-    }
-
-    /// Runs the driver, actuating all connected devices with the current pattern, while the `running` is true.
-    ///
-    /// This is useful for when you want to cancel the driver early. All devices will stop when `run_while` exits.
-    pub async fn run_while(&mut self, running: AtomicBool) -> Result<(), ButtplugClientError> {
-        self.pattern.reset();
-        self.device_patterns.values_mut().for_each(|p| p.reset());
-        self.actuator_patterns.values_mut().for_each(|p| p.reset());
-        let mut interval = interval(Duration::from_millis(1000 / self.tickrate_hz));
-        let start = Instant::now();
-        while running.load(Ordering::Acquire) {
-            let elapsed = start.elapsed().as_secs_f64();
-            if elapsed > self.pattern.duration() {
-                break;
-            }
-
-            for device in self.buttplug.devices() {
-                let level = self.pattern.sample(elapsed);
-                device
-                    .vibrate(&ScalarValueCommand::ScalarValue(level))
                     .await?;
             }
-
             interval.tick().await;
         }
-        self.buttplug.stop_all_devices().await?;
-        Ok(())
+        self.buttplug.stop_all_devices().await
     }
 }
