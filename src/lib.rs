@@ -27,10 +27,10 @@ pub trait PatternGenerator {
     /// Behavior when sampling a pattern for a time past it's duration is not specified.
     /// Some patterns will return valid values for any time, but you should use the
     /// `.repeat()`, `.forever()`, and `.chain()` methods of `Pattern` for extending Patterns
-    fn sample(&mut self, time: f64) -> f64;
+    fn sample(&mut self, time: Duration) -> f64;
 
     /// how long a cycle of the pattern takes in seconds
-    fn duration(&self) -> f64;
+    fn duration(&self) -> Duration;
 
     /// Resets the pattern to its initial state if it is stateful.
     /// if the pattern is stateless, this method does nothing.
@@ -172,11 +172,11 @@ impl BpPattern {
 }
 
 impl PatternGenerator for BpPattern {
-    fn sample(&mut self, time: f64) -> f64 {
+    fn sample(&mut self, time: Duration) -> f64 {
         self.pattern.sample(time)
     }
 
-    fn duration(&self) -> f64 {
+    fn duration(&self) -> Duration {
         self.pattern.duration()
     }
 }
@@ -186,16 +186,16 @@ impl PatternGenerator for BpPattern {
 /// This is useful for when you want to create a pattern that is not supported by the library.
 /// To implement more complex patterns, consider making a type that implements the `PatternGenerator` trait.
 pub struct CustomPattern {
-    pub sample: fn(f64) -> f64,
-    pub duration: fn() -> f64,
+    pub sample: fn(Duration) -> f64,
+    pub duration: fn() -> Duration,
 }
 
 impl PatternGenerator for CustomPattern {
-    fn sample(&mut self, time: f64) -> f64 {
+    fn sample(&mut self, time: Duration) -> f64 {
         (self.sample)(time)
     }
 
-    fn duration(&self) -> f64 {
+    fn duration(&self) -> Duration {
         (self.duration)()
     }
 }
@@ -291,7 +291,7 @@ impl Driver {
         let start = Instant::now();
         let mut interval = interval(Duration::from_millis(1000 / self.tickrate_hz));
         while running.load(Ordering::Acquire) {
-            let elapsed = start.elapsed().as_secs_f64();
+            let elapsed = start.elapsed();
             if elapsed > self.pattern.duration() {
                 break;
             }

@@ -1,4 +1,4 @@
-use std::{ops::Range, time::Instant};
+use std::{ops::Range, time::{Duration, Instant}};
 
 use crate::PatternGenerator;
 
@@ -6,21 +6,21 @@ use crate::PatternGenerator;
 #[derive(Clone, Debug, PartialEq)]
 pub struct Random {
     pub range: Range<f64>,
-    pub duration: f64,
+    pub duration: Duration,
 }
 
 impl Random {
-    pub fn new(range: Range<f64>, duration: f64) -> Self {
+    pub fn new(range: Range<f64>, duration: Duration) -> Self {
         Random { range, duration }
     }
 }
 
 impl PatternGenerator for Random {
-    fn sample(&mut self, _time: f64) -> f64 {
+    fn sample(&mut self, _time: Duration) -> f64 {
         rand::random_range(self.range.clone())
     }
 
-    fn duration(&self) -> f64 {
+    fn duration(&self) -> Duration {
         self.duration
     }
 }
@@ -32,14 +32,14 @@ impl PatternGenerator for Random {
 #[derive(Clone, Debug, PartialEq)]
 pub struct RandomEvery {
     pub range: Range<f64>,
-    pub duration: f64,
+    pub duration: Duration,
     pub interval: f64,
     last_time: Instant,
     last_value: f64,
 }
 
 impl RandomEvery {
-    pub fn new(range: Range<f64>, duration: f64, interval: f64) -> Self {
+    pub fn new(range: Range<f64>, duration: Duration, interval: f64) -> Self {
         let initial = rand::random_range(range.clone());
         RandomEvery {
             range,
@@ -52,7 +52,7 @@ impl RandomEvery {
 }
 
 impl PatternGenerator for RandomEvery {
-    fn sample(&mut self, _time: f64) -> f64 {
+    fn sample(&mut self, _time: Duration) -> f64 {
         if self.last_time.elapsed().as_secs_f64() > self.interval {
             self.last_time = Instant::now();
             self.last_value = rand::random_range(self.range.clone());
@@ -60,7 +60,7 @@ impl PatternGenerator for RandomEvery {
         self.last_value
     }
 
-    fn duration(&self) -> f64 {
+    fn duration(&self) -> Duration {
         self.duration
     }
 
@@ -73,14 +73,14 @@ impl PatternGenerator for RandomEvery {
 #[derive(Clone, Debug, PartialEq)]
 pub struct RandomWalk {
     pub range: Range<f64>,
-    pub duration: f64,
+    pub duration: Duration,
     pub increase: f64,
     pub decrease: f64,
     state: f64,
 }
 
 impl RandomWalk {
-    pub fn new(range: Range<f64>, duration: f64, increase: f64, decrease: f64) -> Self {
+    pub fn new(range: Range<f64>, duration: Duration, increase: f64, decrease: f64) -> Self {
         RandomWalk {
             range,
             duration,
@@ -92,7 +92,7 @@ impl RandomWalk {
 }
 
 impl PatternGenerator for RandomWalk {
-    fn sample(&mut self, _time: f64) -> f64 {
+    fn sample(&mut self, _time: Duration) -> f64 {
         let value = rand::random_range(self.range.clone());
         self.state += if value > self.state {
             self.increase
@@ -102,7 +102,7 @@ impl PatternGenerator for RandomWalk {
         self.state
     }
 
-    fn duration(&self) -> f64 {
+    fn duration(&self) -> Duration {
         self.duration
     }
 

@@ -1,4 +1,5 @@
 use std::f64::consts;
+use std::time::Duration;
 
 use crate::Pattern;
 use crate::PatternGenerator;
@@ -11,11 +12,11 @@ pub struct ScaleTime<P: Pattern> {
 }
 
 impl<P: Pattern> PatternGenerator for ScaleTime<P> {
-    fn sample(&mut self, time: f64) -> f64 {
-        self.pattern.sample(self.scalar * (1.0 / time))
+    fn sample(&mut self, time: Duration) -> f64 {
+        self.pattern.sample(Duration::from_secs_f64(self.scalar * (1.0 / time.as_secs_f64())))
     }
 
-    fn duration(&self) -> f64 {
+    fn duration(&self) -> Duration {
         self.pattern.duration()
     }
 }
@@ -28,11 +29,11 @@ pub struct ScaleIntensity<P: Pattern> {
 }
 
 impl<P: Pattern> PatternGenerator for ScaleIntensity<P> {
-    fn sample(&mut self, time: f64) -> f64 {
+    fn sample(&mut self, time: Duration) -> f64 {
         self.scalar * self.pattern.sample(time)
     }
 
-    fn duration(&self) -> f64 {
+    fn duration(&self) -> Duration {
         self.pattern.duration()
     }
 }
@@ -45,11 +46,11 @@ pub struct Sum<P: Pattern, Q: Pattern> {
 }
 
 impl<P: Pattern, Q: Pattern> PatternGenerator for Sum<P, Q> {
-    fn sample(&mut self, time: f64) -> f64 {
+    fn sample(&mut self, time: Duration) -> f64 {
         self.a.sample(time) + self.b.sample(time)
     }
 
-    fn duration(&self) -> f64 {
+    fn duration(&self) -> Duration {
         self.a.duration().max(self.b.duration())
     }
 }
@@ -62,11 +63,11 @@ pub struct Subtract<P: Pattern, Q: Pattern> {
 }
 
 impl<P: Pattern, Q: Pattern> PatternGenerator for Subtract<P, Q> {
-    fn sample(&mut self, time: f64) -> f64 {
+    fn sample(&mut self, time: Duration) -> f64 {
         self.a.sample(time) - self.b.sample(time)
     }
 
-    fn duration(&self) -> f64 {
+    fn duration(&self) -> Duration {
         self.a.duration().max(self.b.duration())
     }
 }
@@ -79,11 +80,11 @@ pub struct Average<P: Pattern, Q: Pattern> {
 }
 
 impl<P: Pattern, Q: Pattern> PatternGenerator for Average<P, Q> {
-    fn sample(&mut self, time: f64) -> f64 {
+    fn sample(&mut self, time: Duration) -> f64 {
         (self.a.sample(time) + self.b.sample(time)) / 2.0
     }
 
-    fn duration(&self) -> f64 {
+    fn duration(&self) -> Duration {
         self.a.duration().max(self.b.duration())
     }
 }
@@ -97,11 +98,11 @@ pub struct Clamp<P: Pattern> {
 }
 
 impl<P: Pattern> PatternGenerator for Clamp<P> {
-    fn sample(&mut self, time: f64) -> f64 {
+    fn sample(&mut self, time: Duration) -> f64 {
         self.pattern.sample(time).max(self.floor).min(self.ceiling)
     }
 
-    fn duration(&self) -> f64 {
+    fn duration(&self) -> Duration {
         self.pattern.duration()
     }
 }
@@ -113,11 +114,11 @@ pub struct ValidScale<P: Pattern> {
 }
 
 impl<P: Pattern> PatternGenerator for ValidScale<P> {
-    fn sample(&mut self, time: f64) -> f64 {
+    fn sample(&mut self, time: Duration) -> f64 {
         1.0 / (1.0 + consts::E.powf(-self.pattern.sample(time)))
     }
 
-    fn duration(&self) -> f64 {
+    fn duration(&self) -> Duration {
         self.pattern.duration()
     }
 }
@@ -130,12 +131,12 @@ pub struct Shift<P: Pattern> {
 }
 
 impl<P: Pattern> PatternGenerator for Shift<P> {
-    fn sample(&mut self, time: f64) -> f64 {
-        self.pattern.sample(time + self.time_shift)
+    fn sample(&mut self, time: Duration) -> f64 {
+        self.pattern.sample(time + Duration::from_secs_f64(self.time_shift))
     }
 
-    fn duration(&self) -> f64 {
-        self.pattern.duration() - self.time_shift
+    fn duration(&self) -> Duration {
+        self.pattern.duration() - Duration::from_secs_f64(self.time_shift)
     }
 }
 
@@ -147,12 +148,12 @@ pub struct Repeat<P: Pattern> {
 }
 
 impl<P: Pattern> PatternGenerator for Repeat<P> {
-    fn sample(&mut self, time: f64) -> f64 {
-        self.pattern.sample(time % self.duration())
+    fn sample(&mut self, time: Duration) -> f64 {
+        self.pattern.sample(Duration::from_secs_f64(time.as_secs_f64() % self.duration().as_secs_f64()))
     }
 
-    fn duration(&self) -> f64 {
-        self.count * self.pattern.duration()
+    fn duration(&self) -> Duration {
+        Duration::from_secs_f64(self.count * self.pattern.duration().as_secs_f64())
     }
 }
 
@@ -163,12 +164,13 @@ pub struct Forever<P: Pattern> {
 }
 
 impl<P: Pattern> PatternGenerator for Forever<P> {
-    fn sample(&mut self, time: f64) -> f64 {
-        self.pattern.sample(time % self.pattern.duration())
+    fn sample(&mut self, time: Duration) -> f64 {
+        let time_slice = time.as_secs_f64() % self.pattern.duration().as_secs_f64();
+        self.pattern.sample(Duration::from_secs_f64(time_slice))
     }
 
-    fn duration(&self) -> f64 {
-        f64::MAX
+    fn duration(&self) -> Duration {
+        Duration::MAX
     }
 }
 
@@ -180,7 +182,7 @@ pub struct Chain<P: Pattern, Q: Pattern> {
 }
 
 impl<P: Pattern, Q: Pattern> PatternGenerator for Chain<P, Q> {
-    fn sample(&mut self, time: f64) -> f64 {
+    fn sample(&mut self, time: Duration) -> f64 {
         if time < self.first.duration() {
             self.first.sample(time)
         } else {
@@ -188,7 +190,7 @@ impl<P: Pattern, Q: Pattern> PatternGenerator for Chain<P, Q> {
         }
     }
 
-    fn duration(&self) -> f64 {
+    fn duration(&self) -> Duration {
         self.first.duration() + self.then.duration()
     }
 }
@@ -203,11 +205,11 @@ pub struct AmplitudeModulator<P: Pattern, M: Pattern> {
 }
 
 impl<P: Pattern, M: Pattern> PatternGenerator for AmplitudeModulator<P, M> {
-    fn sample(&mut self, time: f64) -> f64 {
+    fn sample(&mut self, time: Duration) -> f64 {
         self.pattern.sample(time) * self.modulator.sample(time)
     }
 
-    fn duration(&self) -> f64 {
+    fn duration(&self) -> Duration {
         self.pattern.duration()
     }
 }
