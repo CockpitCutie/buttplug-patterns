@@ -5,7 +5,7 @@ A composable interface for creating complex vibration patterns for buttplugio de
 Patterns are created using a builder pattern, there are several primitives
 and methods to transform them to create complex patterns.
 ```rs
-use buttplug_patterns::{SineWave, Constant};
+use buttplug_patterns::shapes::{SineWave, Constant};
 
 let my_pattern = SineWave::new(1.0, 1.0) // Sine wave from 0.0 to 1.0 over 1 second
     .repeat(2.0) // repeat the sine wave for 2 cycles
