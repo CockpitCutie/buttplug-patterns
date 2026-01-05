@@ -142,7 +142,7 @@ pub trait Pattern: PatternGenerator + Sized {
     }
 
     /// Modulates the amplitude of the pattern by another pattern.
-    fn amplitude_moduate<M: Pattern>(self, modulator: M) -> AmplitudeModulator<Self, M> {
+    fn multiply<M: Pattern>(self, modulator: M) -> AmplitudeModulator<Self, M> {
         AmplitudeModulator {
             pattern: self,
             modulator,
