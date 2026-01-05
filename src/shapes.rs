@@ -2,6 +2,28 @@ use std::{f64::consts::PI, time::Duration};
 
 use crate::PatternGenerator;
 
+/// Generates a zero value for a given duration.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Pause {
+    duration: Duration,
+}
+
+impl Pause {
+    pub fn new(duration: Duration) -> Self {
+        Pause { duration }
+    }
+}
+
+impl PatternGenerator for Pause {
+    fn sample(&mut self, _time: Duration) -> f64 {
+        0.0
+    }
+
+    fn duration(&self) -> Duration {
+        self.duration
+    }
+}
+
 /// Generates a constant value for a given duration.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Constant {
