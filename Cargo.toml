@@ -1,12 +1,13 @@
 [package]
 name = "buttplug_patterns"
 authors = ["Cockpit Cutie <cockpitcutie@gmail.com>"]
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 license = "MIT"
 description = "A composable library for generating patterns for buttplug devices."
 readme = "README.md"
 repository = "https://github.com/CockpitCutie/buttplug-patterns"
+keywords = ["teledildonics"]
 
 [dependencies]
 buttplug = "9.0.8"

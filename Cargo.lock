@@ -327,7 +327,7 @@ dependencies = [
 
 [[package]]
 name = "buttplug_patterns"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "buttplug",
  "rand 0.9.1",
