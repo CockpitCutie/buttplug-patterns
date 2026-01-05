@@ -148,37 +148,6 @@ pub trait Pattern: PatternGenerator + Sized {
             modulator,
         }
     }
-
-    /// Turns the pattern into a concrete `BpPattern` type.
-    fn into_bp_pattern(self) -> BpPattern
-    where
-        Self: Sized + 'static,
-    {
-        BpPattern::new(self)
-    }
-}
-
-/// A concrete wrapper around a pattern that implements the `PatternGenerator` trait.
-pub struct BpPattern {
-    pub pattern: Box<dyn PatternGenerator>,
-}
-
-impl BpPattern {
-    pub fn new<P: PatternGenerator + 'static>(pattern: P) -> Self {
-        BpPattern {
-            pattern: Box::new(pattern),
-        }
-    }
-}
-
-impl PatternGenerator for BpPattern {
-    fn sample(&mut self, time: Duration) -> f64 {
-        self.pattern.sample(time)
-    }
-
-    fn duration(&self) -> Duration {
-        self.pattern.duration()
-    }
 }
 
 /// Can be used to make simple custom patterns.
