@@ -13,7 +13,9 @@ pub struct ScaleTime<P: Pattern> {
 
 impl<P: Pattern> PatternGenerator for ScaleTime<P> {
     fn sample(&mut self, time: Duration) -> f64 {
-        self.pattern.sample(Duration::from_secs_f64(self.scalar * (1.0 / time.as_secs_f64())))
+        self.pattern.sample(Duration::from_secs_f64(
+            self.scalar * (1.0 / time.as_secs_f64()),
+        ))
     }
 
     fn duration(&self) -> Duration {
@@ -110,7 +112,7 @@ impl<P: Pattern> PatternGenerator for Clamp<P> {
 /// Scales the pattern to a valid range for a buttplug command.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ValidScale<P: Pattern> {
-    pub pattern: P
+    pub pattern: P,
 }
 
 impl<P: Pattern> PatternGenerator for ValidScale<P> {
@@ -132,7 +134,8 @@ pub struct Shift<P: Pattern> {
 
 impl<P: Pattern> PatternGenerator for Shift<P> {
     fn sample(&mut self, time: Duration) -> f64 {
-        self.pattern.sample(time + Duration::from_secs_f64(self.time_shift))
+        self.pattern
+            .sample(time + Duration::from_secs_f64(self.time_shift))
     }
 
     fn duration(&self) -> Duration {
@@ -149,7 +152,9 @@ pub struct Repeat<P: Pattern> {
 
 impl<P: Pattern> PatternGenerator for Repeat<P> {
     fn sample(&mut self, time: Duration) -> f64 {
-        self.pattern.sample(Duration::from_secs_f64(time.as_secs_f64() % self.duration().as_secs_f64()))
+        self.pattern.sample(Duration::from_secs_f64(
+            time.as_secs_f64() % self.duration().as_secs_f64(),
+        ))
     }
 
     fn duration(&self) -> Duration {
@@ -196,7 +201,7 @@ impl<P: Pattern, Q: Pattern> PatternGenerator for Chain<P, Q> {
 }
 
 /// Modulates the amplitude of a pattern by another pattern.
-/// 
+///
 /// Effectively a multiply combinator.
 #[derive(Clone, Debug, PartialEq)]
 pub struct AmplitudeModulator<P: Pattern, M: Pattern> {

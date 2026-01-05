@@ -1,4 +1,7 @@
-use std::{ops::Range, time::{Duration, Instant}};
+use std::{
+    ops::Range,
+    time::{Duration, Instant},
+};
 
 use crate::PatternGenerator;
 
@@ -26,8 +29,8 @@ impl PatternGenerator for Random {
 }
 
 /// Generates a random value between the given range every `interval` seconds.
-/// 
-/// This can not generate random values faster than the driver tickrate, 
+///
+/// This can not generate random values faster than the driver tickrate,
 /// and may skip values if the driver is not fast enough.
 #[derive(Clone, Debug, PartialEq)]
 pub struct RandomEvery {
@@ -98,7 +101,9 @@ impl PatternGenerator for RandomWalk {
             self.increase
         } else {
             -self.decrease
-        }.max(self.range.start).min(self.range.end);
+        }
+        .max(self.range.start)
+        .min(self.range.end);
         self.state
     }
 

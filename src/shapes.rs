@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{f64::consts::PI, time::Duration};
 
 use crate::PatternGenerator;
 
@@ -11,7 +11,7 @@ pub struct Constant {
 
 impl Constant {
     pub fn new(level: f64, duration: Duration) -> Self {
-        return Constant { level, duration };
+        Constant { level, duration }
     }
 }
 
@@ -56,25 +56,25 @@ impl PatternGenerator for Linear {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct SawWave {
     amplitude: f64,
-    wavelength_secs: Duration,
+    wavelength: Duration,
 }
 
 impl SawWave {
-    pub fn new(amplitude: f64, wavelength_secs: Duration) -> Self {
+    pub fn new(amplitude: f64, wavelength: Duration) -> Self {
         SawWave {
             amplitude,
-            wavelength_secs,
+            wavelength,
         }
     }
 }
 
 impl PatternGenerator for SawWave {
     fn sample(&mut self, time: Duration) -> f64 {
-        self.amplitude * (1.0 / self.wavelength_secs.as_secs_f64()) * time.as_secs_f64() % 1.0
+        self.amplitude * (1.0 / self.wavelength.as_secs_f64()) * time.as_secs_f64() % 1.0
     }
 
     fn duration(&self) -> Duration {
-        self.wavelength_secs
+        self.wavelength
     }
 }
 
@@ -85,32 +85,32 @@ impl PatternGenerator for SawWave {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct TriangleWave {
     amplitude: f64,
-    wavelength_secs: Duration,
+    wavelength: Duration,
 }
 
 impl TriangleWave {
-    pub fn new(amplitude: f64, wavelength_secs: Duration) -> Self {
+    pub fn new(amplitude: f64, wavelength: Duration) -> Self {
         TriangleWave {
             amplitude,
-            wavelength_secs,
+            wavelength,
         }
     }
 }
 
 impl PatternGenerator for TriangleWave {
     fn sample(&mut self, time: Duration) -> f64 {
-        // Formula for a triangle wave between 0 and `amplitude` with period `wavelength_secs`
+        // Formula for a triangle wave between 0 and `amplitude` with period `wavelength`
         // https://en.wikipedia.org/wiki/Triangle_wave#Definition
-        ((2.0 * self.amplitude / self.wavelength_secs.as_secs_f64())
-            * (((time.as_secs_f64() - self.wavelength_secs.as_secs_f64() / 2.0)
-                % self.wavelength_secs.as_secs_f64())
-                - self.wavelength_secs.as_secs_f64() / 2.0)
+        ((2.0 * self.amplitude / self.wavelength.as_secs_f64())
+            * (((time.as_secs_f64() - self.wavelength.as_secs_f64() / 2.0)
+                % self.wavelength.as_secs_f64())
+                - self.wavelength.as_secs_f64() / 2.0)
                 .abs())
         .min(self.amplitude) // first couple values are out of range for some reason so we clamp them down
     }
 
     fn duration(&self) -> Duration {
-        self.wavelength_secs
+        self.wavelength
     }
 }
 
@@ -121,22 +121,21 @@ impl PatternGenerator for TriangleWave {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct SquareWave {
     amplitude: f64,
-    wavelength_secs: Duration,
+    wavelength: Duration,
 }
 
 impl SquareWave {
-    pub fn new(amplitude: f64, wavelength_secs: Duration) -> Self {
+    pub fn new(amplitude: f64, wavelength: Duration) -> Self {
         SquareWave {
             amplitude,
-            wavelength_secs,
+            wavelength,
         }
     }
 }
 
 impl PatternGenerator for SquareWave {
     fn sample(&mut self, time: Duration) -> f64 {
-        if time.as_secs_f64() % self.wavelength_secs.as_secs_f64()
-            < self.wavelength_secs.as_secs_f64() / 2.0
+        if time.as_secs_f64() % self.wavelength.as_secs_f64() < self.wavelength.as_secs_f64() / 2.0
         {
             self.amplitude
         } else {
@@ -145,7 +144,7 @@ impl PatternGenerator for SquareWave {
     }
 
     fn duration(&self) -> Duration {
-        self.wavelength_secs
+        self.wavelength
     }
 }
 
@@ -156,31 +155,31 @@ impl PatternGenerator for SquareWave {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct SineWave {
     amplitude: f64,
-    wavelength_secs: Duration,
+    wavelength: Duration,
 }
 
 impl SineWave {
-    pub fn new(amplitude: f64, wavelength_secs: Duration) -> Self {
+    pub fn new(amplitude: f64, wavelength: Duration) -> Self {
         SineWave {
             amplitude,
-            wavelength_secs,
+            wavelength,
         }
     }
 }
 
 impl PatternGenerator for SineWave {
     fn sample(&mut self, time: Duration) -> f64 {
-        // sine value between 0 and `amplitude` based on a wavelength of `wavelength_secs` starting at 0
+        // sine value between 0 and `amplitude` based on a wavelength of `wavelength` starting at 0
         (self.amplitude / 2.0)
             * f64::cos(
-                2.0 * 3.14
-                    * (1.0 / self.wavelength_secs.as_secs_f64())
-                    * (time.as_secs_f64() + self.wavelength_secs.as_secs_f64() / 2.0),
+                2.0 * PI
+                    * (1.0 / self.wavelength.as_secs_f64())
+                    * (time.as_secs_f64() + self.wavelength.as_secs_f64() / 2.0),
             )
             + self.amplitude / 2.0
     }
 
     fn duration(&self) -> Duration {
-        self.wavelength_secs
+        self.wavelength
     }
 }
