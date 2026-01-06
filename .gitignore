@@ -1,3 +1,6 @@
+# Rust build and testing files
 /target
-
 main.rs
+
+# MacOS metadata files
+.DS_store
