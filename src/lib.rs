@@ -3,7 +3,8 @@ pub mod random;
 /// Patterns that generate basic shapes and waves.
 pub mod shapes;
 /// Patterns that transform other patterns.
-/// Most transformers should not be used directly, but through methods on the `Pattern` trait.
+/// 
+/// Note: most transformers should not be used directly, but through methods on the `Pattern` trait.
 pub mod transformers;
 
 use std::{
@@ -42,7 +43,7 @@ impl<T: PatternGenerator> Pattern for T {}
 /// Extension trait for `PatternGenerator`, contains methods for building and transforming
 /// `Pattern`s,
 ///
-/// Patterns can be done with the `Driver` type
+/// Patterns can be run on a device using a `Driver`
 pub trait Pattern: PatternGenerator + Sized {
     /// Scales the pattern in the time domain by a given `scalar`.
     ///
@@ -113,7 +114,7 @@ pub trait Pattern: PatternGenerator + Sized {
     }
 
     // Time shifts a pattern by `time_shift` seconds, can be used to skip a portion of a pattern
-    fn shift(self, time_shift: f64) -> Shift<Self> {
+    fn shift(self, time_shift: Duration) -> Shift<Self> {
         Shift {
             pattern: self,
             time_shift,

@@ -129,17 +129,17 @@ impl<P: Pattern> PatternGenerator for ValidScale<P> {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Shift<P: Pattern> {
     pub pattern: P,
-    pub time_shift: f64,
+    pub time_shift: Duration,
 }
 
 impl<P: Pattern> PatternGenerator for Shift<P> {
     fn sample(&mut self, time: Duration) -> f64 {
         self.pattern
-            .sample(time + Duration::from_secs_f64(self.time_shift))
+            .sample(time + self.time_shift)
     }
 
     fn duration(&self) -> Duration {
-        self.pattern.duration() - Duration::from_secs_f64(self.time_shift)
+        self.pattern.duration() - self.time_shift
     }
 }
 
