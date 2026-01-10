@@ -136,6 +136,15 @@ pub trait Pattern: PatternGenerator + Sized {
         }
     }
 
+    /// Chains two patterns together with a linear crossfade between them.
+    fn crossfade<Q: Pattern>(self, other: Q, overlap: Duration) -> Crossfade<Self, Q> {
+        Crossfade {
+            first: self,
+            then: other,
+            overlap_duration: overlap,
+        }
+    }
+
     /// Modulates the amplitude of the pattern by another pattern.
     fn multiply<M: Pattern>(self, modulator: M) -> AmplitudeModulator<Self, M> {
         AmplitudeModulator {

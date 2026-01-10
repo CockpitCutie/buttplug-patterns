@@ -7,9 +7,9 @@ use std::{
     time::{Duration, Instant},
 };
 
-use crate::{Pattern, PatternGenerator};
 use buttplug::client::{ButtplugClient, ButtplugClientError, ScalarValueCommand};
 use tokio::time::interval;
+use crate::{PatternGenerator, Pattern};
 
 /// Driver that can send patterns to buttplug devices.
 pub struct Driver {
@@ -122,6 +122,7 @@ impl Driver {
                                 .map(|p| p.sample(elapsed))
                                 .unwrap_or(global_intensity),
                         );
+                    println!("level: {level}");
                     actuator_map.insert(*actuator.index(), level);
                 }
                 device

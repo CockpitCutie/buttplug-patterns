@@ -215,9 +215,10 @@ impl<P: Pattern, Q: Pattern> Crossfade<P, Q> {
             overlap_duration,
         }
     }
-    
+
     fn sample_overlap(&mut self, time: Duration) -> f64 {
-        let progress = time.as_secs_f64() / self.overlap_duration.as_secs_f64();
+        let progress = (time - (self.first.duration() - self.overlap_duration)).as_secs_f64()
+            / self.overlap_duration.as_secs_f64();
         self.first.sample(time) * (1.0 - progress) + self.then.sample(time) * progress
     }
 }
@@ -227,13 +228,13 @@ impl<P: Pattern, Q: Pattern> PatternGenerator for Crossfade<P, Q> {
         if time < self.first.duration() - self.overlap_duration {
             self.first.sample(time)
         } else if time < self.first.duration() {
-            self.sample_overlap(time - self.first.duration() - self.overlap_duration)
+            self.sample_overlap(time)
         } else {
             self.then.sample(time - self.overlap_duration)
         }
     }
     fn duration(&self) -> Duration {
-        self.first.duration() - self.then.duration() - self.overlap_duration
+        self.first.duration() + self.then.duration() - self.overlap_duration
     }
 }
 
