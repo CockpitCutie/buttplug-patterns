@@ -1,6 +1,7 @@
 use std::f64::consts;
 use std::time::Duration;
 
+use crate::shapes::Linear;
 use crate::Pattern;
 use crate::PatternGenerator;
 
@@ -134,8 +135,7 @@ pub struct Shift<P: Pattern> {
 
 impl<P: Pattern> PatternGenerator for Shift<P> {
     fn sample(&mut self, time: Duration) -> f64 {
-        self.pattern
-            .sample(time + self.time_shift)
+        self.pattern.sample(time + self.time_shift)
     }
 
     fn duration(&self) -> Duration {
@@ -197,6 +197,43 @@ impl<P: Pattern, Q: Pattern> PatternGenerator for Chain<P, Q> {
 
     fn duration(&self) -> Duration {
         self.first.duration() + self.then.duration()
+    }
+}
+
+/// Linear crossfade between two patterns over a given duration.
+pub struct Crossfade<P: Pattern, Q: Pattern> {
+    pub first: P,
+    pub then: Q,
+    pub overlap_duration: Duration,
+}
+
+impl<P: Pattern, Q: Pattern> Crossfade<P, Q> {
+    pub fn new(first: P, then: Q, overlap_duration: Duration) -> Self {
+        Self {
+            first,
+            then,
+            overlap_duration,
+        }
+    }
+    
+    fn sample_overlap(&mut self, time: Duration) -> f64 {
+        let progress = time.as_secs_f64() / self.overlap_duration.as_secs_f64();
+        self.first.sample(time) * (1.0 - progress) + self.then.sample(time) * progress
+    }
+}
+
+impl<P: Pattern, Q: Pattern> PatternGenerator for Crossfade<P, Q> {
+    fn sample(&mut self, time: Duration) -> f64 {
+        if time < self.first.duration() - self.overlap_duration {
+            self.first.sample(time)
+        } else if time < self.first.duration() {
+            self.sample_overlap(time - self.first.duration() - self.overlap_duration)
+        } else {
+            self.then.sample(time - self.overlap_duration)
+        }
+    }
+    fn duration(&self) -> Duration {
+        self.first.duration() - self.then.duration() - self.overlap_duration
     }
 }
 
