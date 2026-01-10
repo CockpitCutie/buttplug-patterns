@@ -122,7 +122,6 @@ impl Driver {
                                 .map(|p| p.sample(elapsed))
                                 .unwrap_or(global_intensity),
                         );
-                    println!("level: {level}");
                     actuator_map.insert(*actuator.index(), level);
                 }
                 device
